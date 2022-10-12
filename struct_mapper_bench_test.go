@@ -3,6 +3,8 @@ package structmapper_test
 import (
 	"reflect"
 	"testing"
+
+	"github.com/wonksing/structmapper"
 )
 
 func BenchmarkMapper(b *testing.B) {

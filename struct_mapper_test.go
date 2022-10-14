@@ -1,9 +1,12 @@
 package structmapper_test
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/wonksing/structmapper"
@@ -145,4 +148,65 @@ func TestStructPointer(t *testing.T) {
 	sm.Map(&school, &schoolE)
 
 	assert.Equal(t, school.Student.Name, schoolE.Student.Name)
+}
+
+func TestDefaultTimePackage(t *testing.T) {
+	type School struct {
+		CreatedAt time.Time
+		UpdatedAt *time.Time
+		DeletedAt sql.NullTime
+	}
+	type SchoolE struct {
+		CreatedAt time.Time
+		UpdatedAt *time.Time
+		DeletedAt sql.NullTime
+	}
+	src := reflect.TypeOf(School{})
+	dest := reflect.TypeOf(SchoolE{})
+	sm := structmapper.NewStructMapper(src, dest)
+
+	createdAt, _ := time.Parse("20060102150405", "20220101121212")
+	updatedAt, _ := time.Parse("20060102150405", "20221101121212")
+	deletedAt, _ := time.Parse("20060102150405", "20231101121212")
+	school := School{
+		CreatedAt: createdAt,
+		UpdatedAt: &updatedAt,
+		DeletedAt: sql.NullTime{Time: deletedAt, Valid: true},
+	}
+	schoolE := SchoolE{}
+	sm.Map(&school, &schoolE)
+
+	assert.Equal(t, school.CreatedAt, schoolE.CreatedAt)
+	assert.Equal(t, school.UpdatedAt, schoolE.UpdatedAt)
+	assert.Equal(t, school.DeletedAt.Time, schoolE.DeletedAt.Time)
+}
+
+func TestDefaultTimeStruct(t *testing.T) {
+	type School struct {
+		CreatedAt time.Time
+		UpdatedAt *time.Time
+	}
+
+	school := School{}
+	srcType := reflect.TypeOf(school)
+	srcValue := reflect.ValueOf(&school).Elem()
+
+	// now := time.Now()
+	for i := 0; i < srcType.NumField(); i++ {
+		f := srcType.Field(i)
+		fmt.Println(f, f.Type, f.Type.Name(), reflect.ValueOf(f.Type), reflect.ValueOf(f.Type).Interface())
+		tt := reflect.New(f.Type).Elem().Interface()
+		switch tt.(type) {
+		case time.Time:
+			fmt.Println("hey")
+		case *time.Time:
+			fmt.Println("hey pointer")
+		}
+		// timeType := reflect.TypeOf(now)
+		// if f.Type.AssignableTo(timeType) {
+		// 	fmt.Println("assignable", srcValue.CanSet())
+		// 	srcValue.Addr().Set(reflect.ValueOf(now))
+		// }
+	}
+	fmt.Println(srcValue)
 }

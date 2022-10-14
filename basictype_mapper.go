@@ -10,8 +10,12 @@ type BasicTypeMapper struct {
 }
 
 func (c *BasicTypeMapper) Map(srcValue, destValue reflect.Value) {
-	srcField := srcValue.FieldByIndex(c.SrcIndex)
-	destField := destValue.FieldByIndex(c.DestIndex)
+	mapBasicType(c.SrcIndex, c.DestIndex, srcValue, destValue)
+}
+
+func mapBasicType(srcIndex, destIndex []int, srcValue, destValue reflect.Value) {
+	srcField := srcValue.FieldByIndex(srcIndex)
+	destField := destValue.FieldByIndex(destIndex)
 
 	destField.Set(srcField)
 }

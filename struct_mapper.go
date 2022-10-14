@@ -1,8 +1,13 @@
 package structmapper
 
 import (
+	"database/sql/driver"
 	"reflect"
 )
+
+type Valuer interface {
+	Value() (driver.Value, error)
+}
 
 func Map(src, dest any) error {
 	sm, err := LoadMapper(src, dest)

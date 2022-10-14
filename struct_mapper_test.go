@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/wonksing/structmapper"
@@ -145,4 +146,30 @@ func TestStructPointer(t *testing.T) {
 	sm.Map(&school, &schoolE)
 
 	assert.Equal(t, school.Student.Name, schoolE.Student.Name)
+}
+
+func TestDefaultTimePackage(t *testing.T) {
+	type School struct {
+		CreatedAt time.Time
+		UpdatedAt *time.Time
+	}
+	type SchoolE struct {
+		CreatedAt time.Time
+		UpdatedAt *time.Time
+	}
+	src := reflect.TypeOf(School{})
+	dest := reflect.TypeOf(SchoolE{})
+	sm := structmapper.NewStructMapper(src, dest)
+
+	createdAt, _ := time.Parse("20060102150405", "20220101121212")
+	updatedAt, _ := time.Parse("20060102150405", "20221101121212")
+	school := School{
+		CreatedAt: createdAt,
+		UpdatedAt: &updatedAt,
+	}
+	schoolE := SchoolE{}
+	sm.Map(&school, &schoolE)
+
+	assert.Equal(t, school.CreatedAt, schoolE.CreatedAt)
+	assert.Equal(t, school.UpdatedAt, schoolE.UpdatedAt)
 }

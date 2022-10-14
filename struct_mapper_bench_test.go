@@ -21,9 +21,9 @@ func BenchmarkMapper(b *testing.B) {
 		Mobile:    Mobile{Number: "20202"},
 		Mobiles:   mobiles,
 	}
-	personEntity := PersonEntity{}
 
 	for i := 0; i < b.N; i++ {
+		personEntity := PersonEntity{}
 		sm := structmapper.NewStructMapper(src, dest)
 		sm.Map(&person, &personEntity)
 	}
@@ -40,9 +40,9 @@ func BenchmarkMapperCached(b *testing.B) {
 		Mobile:    Mobile{Number: "20202"},
 		Mobiles:   mobiles,
 	}
-	personEntity := PersonEntity{}
 
 	for i := 0; i < b.N; i++ {
+		personEntity := PersonEntity{}
 		structmapper.Map(&person, &personEntity)
 	}
 }

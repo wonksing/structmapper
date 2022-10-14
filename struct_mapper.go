@@ -3,6 +3,7 @@ package structmapper
 import (
 	"database/sql/driver"
 	"reflect"
+	"time"
 )
 
 type Valuer interface {
@@ -79,7 +80,17 @@ func (c *StructMapper) iterateStructFields(srcIndex, destIndex []int) {
 			continue
 		}
 
-		c.scanStructField(srcIndex, destIndex, srcFieldKind, srcField, destField)
+		value := reflect.New(srcField.Type).Elem().Interface()
+		switch value.(type) {
+		case time.Time:
+			c.addBasicMapper(srcIndex, destIndex, srcField, destField)
+		case *time.Time:
+			c.addBasicMapper(srcIndex, destIndex, srcField, destField)
+		case Valuer:
+			c.addBasicMapper(srcIndex, destIndex, srcField, destField)
+		default:
+			c.scanStructField(srcIndex, destIndex, srcFieldKind, srcField, destField)
+		}
 	}
 }
 

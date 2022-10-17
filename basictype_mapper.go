@@ -17,5 +17,9 @@ func mapBasicType(srcIndex, destIndex []int, srcValue, destValue reflect.Value) 
 	srcField := srcValue.FieldByIndex(srcIndex)
 	destField := destValue.FieldByIndex(destIndex)
 
-	destField.Set(srcField)
+	if srcField.Type().AssignableTo(destField.Type()) {
+		destField.Set(srcField)
+	} else if srcField.Type().ConvertibleTo(destField.Type()) {
+		destField.Set(srcField.Convert(destField.Type()))
+	}
 }

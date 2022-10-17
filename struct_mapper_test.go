@@ -210,3 +210,23 @@ func TestDefaultTimeStruct(t *testing.T) {
 	}
 	fmt.Println(srcValue)
 }
+
+func TestAliasedType(t *testing.T) {
+	type StudentName string
+	type Student struct {
+		Name string
+	}
+	type StudentE struct {
+		Name StudentName
+	}
+	src := reflect.TypeOf(Student{})
+	dest := reflect.TypeOf(StudentE{})
+	sm := structmapper.NewStructMapper(src, dest)
+
+	student := Student{"wonk"}
+	studentE := StudentE{}
+
+	sm.Map(&student, &studentE)
+
+	assert.Equal(t, student.Name, student.Name)
+}

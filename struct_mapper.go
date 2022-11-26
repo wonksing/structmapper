@@ -25,6 +25,22 @@ func NewStructMapper(src, dest reflect.Type) *StructMapper {
 
 func NewStructMapperWithIndices(srcIndex, destIndex []int, src, dest reflect.Type) *StructMapper {
 	sm := &StructMapper{
+		depth:    0,
+		SrcType:  src,
+		DestType: dest,
+	}
+	sm.iterateStructFields(srcIndex, destIndex)
+
+	return sm
+}
+
+func NewStructMapperWithParent(parent *StructMapper, src, dest reflect.Type) *StructMapper {
+	return NewStructMapperWithIndicesWithParent(parent, []int{}, []int{}, src, dest)
+}
+
+func NewStructMapperWithIndicesWithParent(parent *StructMapper, srcIndex, destIndex []int, src, dest reflect.Type) *StructMapper {
+	sm := &StructMapper{
+		depth:    parent.depth + 1,
 		SrcType:  src,
 		DestType: dest,
 	}
@@ -41,6 +57,9 @@ type Mapper interface {
 // Each field is mapped by the field name, so they must be identical.
 // Field type should be convertible if they are primary types.(eg. int8 and int, int and aliased int)
 type StructMapper struct {
+	// indicates depth of struct starts with 0
+	depth int
+
 	// source type
 	SrcType reflect.Type
 	// destination type
@@ -129,7 +148,7 @@ func (c *StructMapper) addStructPointerMapper(srcIndex, destIndex []int, src, de
 	c.mappers = append(c.mappers, &StructTypeMapper{
 		SrcIndex:  newSrcIndex,
 		DestIndex: newDestIndex,
-		structMapper: NewStructMapperWithIndices(newSrcIndex, newDestIndex,
+		structMapper: NewStructMapperWithIndicesWithParent(c, newSrcIndex, newDestIndex,
 			src.Type.Elem(), dest.Type.Elem()),
 	})
 
@@ -143,7 +162,7 @@ func (c *StructMapper) addStructMapper(srcIndex, destIndex []int, src, dest refl
 	c.mappers = append(c.mappers, &StructTypeMapper{
 		SrcIndex:  newSrcIndex,
 		DestIndex: newDestIndex,
-		structMapper: NewStructMapperWithIndices(newSrcIndex, newDestIndex,
+		structMapper: NewStructMapperWithIndicesWithParent(c, newSrcIndex, newDestIndex,
 			src.Type, dest.Type),
 	})
 }
@@ -159,22 +178,28 @@ func (c *StructMapper) addBasicMapper(srcIndex, destIndex []int, src, dest refle
 }
 
 func (c *StructMapper) addSliceOfStructMapper(srcIndex, destIndex []int, src, dest reflect.StructField) {
+	if c.depth >= 3 {
+		return
+	}
 	c.mappers = append(c.mappers, &SliceTypeMapper{
 		SrcIndex:          append(srcIndex, src.Index...),
 		DestIndex:         append(destIndex, dest.Index...),
 		DestElementType:   reflect.SliceOf(dest.Type.Elem()),
 		HasPointerElement: dest.Type.Elem().Kind() == reflect.Pointer,
-		ElementMapper:     NewStructMapper(src.Type.Elem(), dest.Type.Elem()),
+		ElementMapper:     NewStructMapperWithParent(c, src.Type.Elem(), dest.Type.Elem()),
 	})
 }
 
 func (c *StructMapper) addSliceOfStructPointerMapper(srcIndex, destIndex []int, src, dest reflect.StructField) {
+	if c.depth >= 3 {
+		return
+	}
 	c.mappers = append(c.mappers, &SliceTypeMapper{
 		SrcIndex:          append(srcIndex, src.Index...),
 		DestIndex:         append(destIndex, dest.Index...),
 		DestElementType:   reflect.SliceOf(dest.Type.Elem()),
 		HasPointerElement: dest.Type.Elem().Kind() == reflect.Pointer,
-		ElementMapper:     NewStructMapper(src.Type.Elem().Elem(), dest.Type.Elem().Elem()),
+		ElementMapper:     NewStructMapperWithParent(c, src.Type.Elem().Elem(), dest.Type.Elem().Elem()),
 	})
 }
 

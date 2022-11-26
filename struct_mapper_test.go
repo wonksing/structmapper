@@ -230,3 +230,43 @@ func TestAliasedType(t *testing.T) {
 
 	assert.Equal(t, student.Name, student.Name)
 }
+
+type Book struct {
+	Author string
+}
+type Student struct {
+	Name  string
+	Books []Book
+}
+
+type BookE struct {
+	Author string
+}
+type StudentE struct {
+	Name  string
+	Books []BookE
+}
+
+func (o *StudentE) String() string {
+	b, _ := json.Marshal(o)
+	return string(b)
+}
+
+func TestRecursiveFields(t *testing.T) {
+	src := reflect.TypeOf(Student{})
+	dest := reflect.TypeOf(StudentE{})
+	sm := structmapper.NewStructMapper(src, dest)
+
+	student := Student{
+		Name: "wonk",
+		Books: []Book{
+			{Author: "mink"}, {Author: "Sina"}, {Author: "Sina"}, {Author: "Sina"}, {Author: "Sina"}, {Author: "Sina"}, {Author: "Sina"}, {Author: "Sina"},
+		},
+	}
+	studentE := StudentE{}
+
+	sm.Map(&student, &studentE)
+	// log.Println(studentE.String())
+	expected := `{"Name":"wonk","Books":[{"Author":"mink"},{"Author":"Sina"},{"Author":"Sina"},{"Author":"Sina"},{"Author":"Sina"},{"Author":"Sina"},{"Author":"Sina"},{"Author":"Sina"}]}`
+	assert.Equal(t, expected, studentE.String())
+}

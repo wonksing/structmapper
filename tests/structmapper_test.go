@@ -1,6 +1,7 @@
 package structmapper_test
 
 import (
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -15,6 +16,9 @@ func init() {
 
 	structmapper.StoreMapper(&Machine{}, &MachineDto{})
 	structmapper.StoreMapper(&MachineDto{}, &Machine{})
+
+	structmapper.StoreMapper(&WithMap{}, &WithMapDto{})
+	structmapper.StoreMapper(&WithMapDto{}, &WithMap{})
 }
 
 func Test_structMapper_Animal1(t *testing.T) {
@@ -69,15 +73,71 @@ func Test_structMapper_Machine1(t *testing.T) {
 	assert.Nil(t, err)
 	assert.EqualValues(t, a.Name, b.Name)
 	assert.EqualValues(t, a.Age, b.Age)
+	assert.EqualValues(t, a.String(), b.String())
+	fmt.Println(a.String())
+	fmt.Println(b.String())
 }
 
 func Test_structMapper_Machine2(t *testing.T) {
-	a := AnimalDto{
-		Name: "asdf",
-		Age:  19,
+	str := uuid.NewString()
+	i := rand.Intn(100)
+	a := MachineDto{
+		Animal: AnimalDto{
+			Name: "asdf",
+		},
+		Name:    &str,
+		Age:     &i,
+		Bullets: []string{"awefi", "zxcvd", "feifeoe9"},
+		Animals: []AnimalDto{
+			AnimalDto{
+				Name: "1asdf",
+				Age:  0,
+			},
+			AnimalDto{
+				Name: "33asdf",
+			},
+			AnimalDto{
+				Name: "33asdf44",
+			},
+			AnimalDto{
+				Name: "33asdf44",
+			},
+		},
 	}
-	b := Animal{}
+	b := Machine{}
 	err := structmapper.Map(&a, &b)
 	assert.Nil(t, err)
 	assert.EqualValues(t, a.Name, b.Name)
+	assert.EqualValues(t, a.Age, b.Age)
+	assert.EqualValues(t, a.String(), b.String())
+	fmt.Println(a.String())
+	fmt.Println(b.String())
+}
+
+func Test_structMapper_WithMap1(t *testing.T) {
+	m := make(map[interface{}]interface{})
+	m[1] = "1"
+	a := WithMap{
+		Map: m,
+	}
+	b := WithMapDto{}
+	err := structmapper.Map(&a, &b)
+	assert.Nil(t, err)
+	assert.EqualValues(t, a, b)
+	// m[1] = "2"
+	// assert.NotEqualValues(t, a, b)
+}
+
+func Test_structMapper_WithMap2(t *testing.T) {
+	m := make(map[interface{}]interface{})
+	m[1] = "1"
+	a := WithMapDto{
+		Map: m,
+	}
+	b := WithMap{}
+	err := structmapper.Map(&a, &b)
+	assert.Nil(t, err)
+	assert.EqualValues(t, a, b)
+	// m[1] = "2"
+	// assert.NotEqualValues(t, a, b)
 }

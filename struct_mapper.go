@@ -207,8 +207,8 @@ func (c *StructMapper) Map(src, dest interface{}) {
 	srcValue := reflect.ValueOf(src).Elem()
 	destValue := reflect.ValueOf(dest).Elem()
 
-	initializeFieldsWithIndices(srcValue, c.srcIndicesToInitialize)
-	initializeFieldsWithIndices(destValue, c.destIndicesToInitialize)
+	// initializeFieldsWithIndices(srcValue, c.srcIndicesToInitialize)
+	// initializeFieldsWithIndices(destValue, c.destIndicesToInitialize)
 
 	for _, m := range c.mappers {
 		m.Map(srcValue, destValue)
